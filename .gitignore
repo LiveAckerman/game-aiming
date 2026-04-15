@@ -1,0 +1,79 @@
+# ───────────────────────────────────────────
+# .NET / C# 构建产物
+# ───────────────────────────────────────────
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+.vs/
+
+# 发布 & 打包输出（不提交二进制）
+dist/
+installer/output/
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# MSBuild
+*.msbuild
+msbuild.log
+
+# ───────────────────────────────────────────
+# IDE / 编辑器
+# ───────────────────────────────────────────
+# Visual Studio
+.vs/
+*.VC.db
+*.VC.opendb
+ipch/
+*.opensdf
+*.sdf
+*.cachefile
+*.aps
+
+# Cursor / VS Code
+.cursor/
+.vscode/
+*.code-workspace
+
+# Rider
+.idea/
+*.sln.iml
+
+# ───────────────────────────────────────────
+# 运行时 / 用户数据
+# ───────────────────────────────────────────
+# 应用生成的日志
+startup.log
+*.log
+
+# 根目录下的临时截图（由 Cursor 上传）
+/*.png
+/*.jpg
+
+# ───────────────────────────────────────────
+# Windows
+# ───────────────────────────────────────────
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# ───────────────────────────────────────────
+# 保留到仓库的内容
+# ───────────────────────────────────────────
+# icon.ico 需要提交（源码编译依赖它）
+!src/CrosshairTool/Resources/icon.ico
+# Inno Setup 语言文件
+!installer/Languages/

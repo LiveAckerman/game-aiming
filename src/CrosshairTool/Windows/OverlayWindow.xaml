@@ -1,0 +1,11 @@
+<Window x:Class="CrosshairTool.Windows.OverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        AllowsTransparency="True"
+        Background="Transparent"
+        WindowStyle="None"
+        ShowInTaskbar="False"
+        Topmost="True"
+        Left="0" Top="0"
+        Title="CrosshairOverlay">
+</Window>
