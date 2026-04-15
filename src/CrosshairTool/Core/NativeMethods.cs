@@ -13,9 +13,30 @@ internal static class NativeMethods
 
     // SetWindowPos 常量
     public static readonly IntPtr HWND_TOPMOST = new(-1);
-    public const uint SWP_NOMOVE = 0x0002;
-    public const uint SWP_NOSIZE = 0x0001;
+    public const uint SWP_NOMOVE   = 0x0002;
+    public const uint SWP_NOSIZE   = 0x0001;
     public const uint SWP_NOACTIVATE = 0x0010;
+    public const uint SWP_NOZORDER = 0x0004;   // 不改变 Z 序
+
+    // 窗口位置消息
+    public const int WM_WINDOWPOSCHANGING = 0x0046;
+    public const int WM_WINDOWPOSCHANGED  = 0x0047;
+
+    /// <summary>
+    /// 与 WM_WINDOWPOSCHANGING / WM_WINDOWPOSCHANGED 消息一起传递的结构体。
+    /// 字段顺序必须与 Win32 保持一致。
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct WINDOWPOS
+    {
+        public IntPtr hwnd;
+        public IntPtr hwndInsertAfter;
+        public int    x;
+        public int    y;
+        public int    cx;
+        public int    cy;
+        public uint   flags;
+    }
 
     // 热键消息
     public const int WM_HOTKEY = 0x0312;

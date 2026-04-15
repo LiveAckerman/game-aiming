@@ -40,6 +40,8 @@ public partial class App : Application
             _mutex = new Mutex(true, "CrosshairTool_SingleInstance", out bool createdNew);
             if (!createdNew)
             {
+                // 未拿到锁，将 _mutex 置 null 避免 OnExit 中错误释放
+                _mutex = null;
                 MessageBox.Show("CrosshairTool 已经在运行中。\n请在系统托盘查找图标。",
                     "CrosshairTool", MessageBoxButton.OK, MessageBoxImage.Information);
                 Shutdown();

@@ -43,6 +43,8 @@ SetupIconFile=..\src\CrosshairTool\Resources\icon.ico
 ; 不需要管理员权限（安装到用户目录）
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=commandline dialog
+DisableDirPage=no
+DisableProgramGroupPage=no
 ; 版本信息
 VersionInfoVersion={#AppVersion}
 VersionInfoDescription={#AppName} - FPS Crosshair Overlay Tool
