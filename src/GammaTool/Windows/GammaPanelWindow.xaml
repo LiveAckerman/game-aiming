@@ -1,0 +1,359 @@
+<Window x:Class="GammaTool.Windows.GammaPanelWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ctrl="clr-namespace:GammaTool.Controls"
+        Title="屏幕调节工具 - FPS 工具箱"
+        Width="720" Height="620"
+        MinWidth="640" MinHeight="560"
+        WindowStartupLocation="CenterScreen"
+        Background="#1E1E1E"
+        Foreground="White"
+        FontFamily="Microsoft YaHei UI"
+        FontSize="13">
+    <Window.Resources>
+        <Style TargetType="Slider">
+            <Setter Property="Foreground" Value="#007ACC"/>
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="#3C3C3C"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#555"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="Height" Value="24"/>
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#007ACC"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,5"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#0099FF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="DangerBtn" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="#8B0000"/>
+        </Style>
+        <Style x:Key="SecondaryBtn" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="#555"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="Lbl">
+            <Setter Property="Foreground" Value="#CCC"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="GroupHeader">
+            <Setter Property="Foreground" Value="#007ACC"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,8,0,4"/>
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#CCC"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <!-- 深色 ComboBoxItem -->
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="#2D2D30"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#3E3E42"/>
+                            </Trigger>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#094771"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 深色 ComboBox (支持 IsEditable) -->
+        <Style TargetType="ComboBox">
+            <Setter Property="Background" Value="#3C3C3C"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#555"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="22"/>
+                            </Grid.ColumnDefinitions>
+                            <!-- 主体 -->
+                            <Border x:Name="MainBd" Grid.ColumnSpan="2"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"/>
+                            <!-- 非编辑模式:显示选中项内容 -->
+                            <ContentPresenter x:Name="ContentSite" Grid.Column="0"
+                                              Margin="6,0,0,0"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
+                                              IsHitTestVisible="False"
+                                              VerticalAlignment="Center"/>
+                            <!-- 编辑模式下的文本框 -->
+                            <TextBox x:Name="PART_EditableTextBox" Grid.Column="0"
+                                     Margin="4,0,0,0"
+                                     Background="Transparent"
+                                     Foreground="White"
+                                     BorderThickness="0"
+                                     VerticalContentAlignment="Center"
+                                     IsReadOnly="{TemplateBinding IsReadOnly}"
+                                     Visibility="Collapsed"
+                                     Focusable="True"/>
+                            <!-- 下拉箭头按钮 -->
+                            <ToggleButton x:Name="ToggleBtn" Grid.Column="1"
+                                          Focusable="False"
+                                          ClickMode="Press"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Background="Transparent">
+                                            <Path HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  Data="M 0 0 L 8 0 L 4 4 Z" Fill="#CCC"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <!-- 下拉弹窗 -->
+                            <Popup x:Name="Popup" Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Slide">
+                                <Border Background="#2D2D30" BorderBrush="#555" BorderThickness="1"
+                                        MinWidth="{TemplateBinding ActualWidth}"
+                                        MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <ScrollViewer>
+                                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEditable" Value="True">
+                                <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="ContentSite" Property="Visibility" Value="Collapsed"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="MainBd" Property="BorderBrush" Value="#007ACC"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <DockPanel LastChildFill="True">
+        <!-- 顶部 -->
+        <Border DockPanel.Dock="Top" Background="#252526" Padding="14,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" Grid.Column="0">
+                    <TextBlock Text="🎨 屏幕调节工具" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Text="  (Gamma Panel 复刻)" FontSize="11" Foreground="#888"
+                               VerticalAlignment="Bottom" Margin="4,0,0,3"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Grid.Column="2">
+                    <TextBlock Text="显示器:" Style="{StaticResource Lbl}" Margin="0,0,6,0"/>
+                    <ComboBox x:Name="CmbMonitors" Width="240" SelectionChanged="OnMonitorChanged"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 底部按钮栏 -->
+        <Border DockPanel.Dock="Bottom" Background="#252526" BorderBrush="#333" BorderThickness="0,1,0,0" Padding="14,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="TxtStatus" Grid.Column="0" Foreground="#888" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button x:Name="BtnPreview" Content="预览" Click="OnPreviewClicked" MinWidth="90"/>
+                    <Button Content="重置为默认" Style="{StaticResource SecondaryBtn}" Click="OnResetClicked"/>
+                    <Button Content="关闭程序" Style="{StaticResource DangerBtn}" Click="OnCloseClicked"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 中间 -->
+        <Grid Margin="14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="260"/>
+            </Grid.ColumnDefinitions>
+
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="0,0,14,0">
+                <StackPanel>
+
+                    <!-- RGB 联动开关 -->
+                    <WrapPanel>
+                        <CheckBox x:Name="ChkLinked" Content="RGB 通道联动（未勾选时每个通道独立）" IsChecked="True"
+                                  Checked="OnLinkedChanged" Unchecked="OnLinkedChanged"/>
+                    </WrapPanel>
+
+                    <!-- Master / Linked 通道组 -->
+                    <TextBlock Style="{StaticResource GroupHeader}" Text="● 主通道" x:Name="HdrMaster"/>
+                    <Grid x:Name="PnlMaster" Margin="0,0,0,10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition/><RowDefinition/><RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="60"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource Lbl}" Text="Gamma"/>
+                        <Slider x:Name="SldMGamma" Grid.Row="0" Grid.Column="1"
+                                Minimum="0.1" Maximum="4" SmallChange="0.01" ValueChanged="OnSliderChanged" Tag="M-G"/>
+                        <TextBlock x:Name="TxtMGamma" Grid.Row="0" Grid.Column="2" Style="{StaticResource Lbl}"
+                                   HorizontalAlignment="Right"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource Lbl}" Text="亮度"/>
+                        <Slider x:Name="SldMBright" Grid.Row="1" Grid.Column="1"
+                                Minimum="-1" Maximum="1" SmallChange="0.01" ValueChanged="OnSliderChanged" Tag="M-B"/>
+                        <TextBlock x:Name="TxtMBright" Grid.Row="1" Grid.Column="2" Style="{StaticResource Lbl}"
+                                   HorizontalAlignment="Right"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource Lbl}" Text="对比度"/>
+                        <Slider x:Name="SldMContrast" Grid.Row="2" Grid.Column="1"
+                                Minimum="-1" Maximum="1" SmallChange="0.01" ValueChanged="OnSliderChanged" Tag="M-C"/>
+                        <TextBlock x:Name="TxtMContrast" Grid.Row="2" Grid.Column="2" Style="{StaticResource Lbl}"
+                                   HorizontalAlignment="Right"/>
+                    </Grid>
+
+                    <!-- RGB 独立通道 -->
+                    <StackPanel x:Name="PnlPerChannel" Visibility="Collapsed">
+                        <TextBlock Style="{StaticResource GroupHeader}" Text="● 红色通道" Foreground="#FF6060"/>
+                        <Grid Margin="0,0,0,6" Tag="R">
+                            <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80"/><ColumnDefinition Width="*"/><ColumnDefinition Width="60"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Row="0" Style="{StaticResource Lbl}" Text="Gamma"/>
+                            <Slider x:Name="SldRGamma" Grid.Row="0" Grid.Column="1"
+                                    Minimum="0.1" Maximum="4" SmallChange="0.01"
+                                    ValueChanged="OnSliderChanged" Tag="R-G"/>
+                            <TextBlock x:Name="TxtRGamma" Grid.Row="0" Grid.Column="2" Style="{StaticResource Lbl}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Row="1" Style="{StaticResource Lbl}" Text="亮度"/>
+                            <Slider x:Name="SldRBright" Grid.Row="1" Grid.Column="1"
+                                    Minimum="-1" Maximum="1" SmallChange="0.01"
+                                    ValueChanged="OnSliderChanged" Tag="R-B"/>
+                            <TextBlock x:Name="TxtRBright" Grid.Row="1" Grid.Column="2" Style="{StaticResource Lbl}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Row="2" Style="{StaticResource Lbl}" Text="对比度"/>
+                            <Slider x:Name="SldRContrast" Grid.Row="2" Grid.Column="1"
+                                    Minimum="-1" Maximum="1" SmallChange="0.01"
+                                    ValueChanged="OnSliderChanged" Tag="R-C"/>
+                            <TextBlock x:Name="TxtRContrast" Grid.Row="2" Grid.Column="2" Style="{StaticResource Lbl}" HorizontalAlignment="Right"/>
+                        </Grid>
+
+                        <TextBlock Style="{StaticResource GroupHeader}" Text="● 绿色通道" Foreground="#60FF60"/>
+                        <Grid Margin="0,0,0,6" Tag="G">
+                            <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80"/><ColumnDefinition Width="*"/><ColumnDefinition Width="60"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Row="0" Style="{StaticResource Lbl}" Text="Gamma"/>
+                            <Slider x:Name="SldGGamma" Grid.Row="0" Grid.Column="1"
+                                    Minimum="0.1" Maximum="4" SmallChange="0.01"
+                                    ValueChanged="OnSliderChanged" Tag="G-G"/>
+                            <TextBlock x:Name="TxtGGamma" Grid.Row="0" Grid.Column="2" Style="{StaticResource Lbl}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Row="1" Style="{StaticResource Lbl}" Text="亮度"/>
+                            <Slider x:Name="SldGBright" Grid.Row="1" Grid.Column="1"
+                                    Minimum="-1" Maximum="1" SmallChange="0.01"
+                                    ValueChanged="OnSliderChanged" Tag="G-B"/>
+                            <TextBlock x:Name="TxtGBright" Grid.Row="1" Grid.Column="2" Style="{StaticResource Lbl}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Row="2" Style="{StaticResource Lbl}" Text="对比度"/>
+                            <Slider x:Name="SldGContrast" Grid.Row="2" Grid.Column="1"
+                                    Minimum="-1" Maximum="1" SmallChange="0.01"
+                                    ValueChanged="OnSliderChanged" Tag="G-C"/>
+                            <TextBlock x:Name="TxtGContrast" Grid.Row="2" Grid.Column="2" Style="{StaticResource Lbl}" HorizontalAlignment="Right"/>
+                        </Grid>
+
+                        <TextBlock Style="{StaticResource GroupHeader}" Text="● 蓝色通道" Foreground="#6096FF"/>
+                        <Grid Margin="0,0,0,6" Tag="B">
+                            <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80"/><ColumnDefinition Width="*"/><ColumnDefinition Width="60"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Row="0" Style="{StaticResource Lbl}" Text="Gamma"/>
+                            <Slider x:Name="SldBGamma" Grid.Row="0" Grid.Column="1"
+                                    Minimum="0.1" Maximum="4" SmallChange="0.01"
+                                    ValueChanged="OnSliderChanged" Tag="B-G"/>
+                            <TextBlock x:Name="TxtBGamma" Grid.Row="0" Grid.Column="2" Style="{StaticResource Lbl}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Row="1" Style="{StaticResource Lbl}" Text="亮度"/>
+                            <Slider x:Name="SldBBright" Grid.Row="1" Grid.Column="1"
+                                    Minimum="-1" Maximum="1" SmallChange="0.01"
+                                    ValueChanged="OnSliderChanged" Tag="B-B"/>
+                            <TextBlock x:Name="TxtBBright" Grid.Row="1" Grid.Column="2" Style="{StaticResource Lbl}" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Row="2" Style="{StaticResource Lbl}" Text="对比度"/>
+                            <Slider x:Name="SldBContrast" Grid.Row="2" Grid.Column="1"
+                                    Minimum="-1" Maximum="1" SmallChange="0.01"
+                                    ValueChanged="OnSliderChanged" Tag="B-C"/>
+                            <TextBlock x:Name="TxtBContrast" Grid.Row="2" Grid.Column="2" Style="{StaticResource Lbl}" HorizontalAlignment="Right"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- 方案管理 -->
+                    <TextBlock Style="{StaticResource GroupHeader}" Text="● 方案"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource Lbl}" Text="方案名称"/>
+                        <ComboBox Grid.Column="1" x:Name="CmbSchemes" IsEditable="True"
+                                  SelectionChanged="OnSchemeSelected"/>
+                        <Button Grid.Column="2" Content="加载" Click="OnLoadSchemeClicked" Style="{StaticResource SecondaryBtn}"/>
+                        <Button Grid.Column="3" Content="保存" Click="OnSaveSchemeClicked"/>
+                        <Button Grid.Column="4" Content="删除" Click="OnDeleteSchemeClicked" Style="{StaticResource DangerBtn}"/>
+                    </Grid>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- 右侧预览 -->
+            <StackPanel Grid.Column="1">
+                <TextBlock Style="{StaticResource GroupHeader}" Text="● LUT 曲线"/>
+                <Border BorderBrush="#444" BorderThickness="1" Height="240">
+                    <ctrl:LutCurveView x:Name="CurveView"/>
+                </Border>
+                <TextBlock Text="对角虚线 = 原始（无变换）" Foreground="#666" FontSize="11" Margin="0,4,0,10"/>
+
+                <TextBlock Style="{StaticResource GroupHeader}" Text="● 预览状态"/>
+                <Border Background="#2D2D30" BorderBrush="#444" BorderThickness="1" Padding="10">
+                    <TextBlock x:Name="TxtPreviewState" Text="未预览（编辑中）" Foreground="#AAA" TextWrapping="Wrap"/>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </DockPanel>
+</Window>

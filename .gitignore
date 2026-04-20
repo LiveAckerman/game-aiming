@@ -77,3 +77,10 @@ $RECYCLE.BIN/
 !src/CrosshairTool/Resources/icon.ico
 # Inno Setup 语言文件
 !installer/Languages/
+
+# .NET runtime 缓存(release.ps1 自动下载,不入库)
+installer/runtimes/
+# 发版产物
+installer/output/
+dist/
+

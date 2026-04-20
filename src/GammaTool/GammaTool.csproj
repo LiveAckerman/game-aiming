@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -6,17 +6,18 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <UseWindowsForms>true</UseWindowsForms>
+    <UseWindowsForms>false</UseWindowsForms>
     <ApplicationIcon>Resources\icon.ico</ApplicationIcon>
-    <AssemblyTitle>CrosshairTool</AssemblyTitle>
-    <AssemblyDescription>FPS 工具箱 - 屏幕准心工具</AssemblyDescription>
+    <AssemblyTitle>GammaTool</AssemblyTitle>
+    <AssemblyDescription>FPS 工具箱 - 屏幕调节工具</AssemblyDescription>
     <Company>FPSToolbox</Company>
-    <Product>FPSToolbox.CrosshairTool</Product>
+    <Product>FPSToolbox.GammaTool</Product>
     <Version>1.0.0</Version>
+    <RootNamespace>GammaTool</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <Resource Include="Resources\icon.ico" />
+    <Resource Include="Resources\icon.ico" Condition="Exists('Resources\icon.ico')" />
   </ItemGroup>
 
   <ItemGroup>

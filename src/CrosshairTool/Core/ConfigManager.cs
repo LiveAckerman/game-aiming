@@ -1,99 +1,61 @@
 using System.IO;
-using System.Text.Json;
 using CrosshairTool.Models;
+using FPSToolbox.Shared;
+using FPSToolbox.Shared.Config;
+using FPSToolbox.Shared.Ipc;
 
 namespace CrosshairTool.Core;
 
+/// <summary>
+/// 准心工具的配置 / 预设读写。路径由 <see cref="PathService"/> 统一提供。
+/// </summary>
 public class ConfigManager
 {
-    private static readonly string ConfigDir =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "CrosshairTool");
+    private static readonly string ConfigPath = PathService.GetToolConfigPath(ToolIds.CrosshairTool);
+    private static readonly string PresetsDir = PathService.GetToolPresetsDir(ToolIds.CrosshairTool);
 
-    private static readonly string ConfigPath = Path.Combine(ConfigDir, "config.json");
-    private static readonly string PresetsDir = Path.Combine(ConfigDir, "presets");
+    public CrosshairConfig Load() => JsonConfigStore.Load<CrosshairConfig>(ConfigPath);
 
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = true,
-        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
-    };
-
-    public CrosshairConfig Load()
-    {
-        try
-        {
-            if (!File.Exists(ConfigPath))
-                return new CrosshairConfig();
-
-            var json = File.ReadAllText(ConfigPath);
-            return JsonSerializer.Deserialize<CrosshairConfig>(json, JsonOptions) ?? new CrosshairConfig();
-        }
-        catch
-        {
-            return new CrosshairConfig();
-        }
-    }
-
-    public void Save(CrosshairConfig config)
-    {
-        try
-        {
-            Directory.CreateDirectory(ConfigDir);
-            var json = JsonSerializer.Serialize(config, JsonOptions);
-            File.WriteAllText(ConfigPath, json);
-        }
-        catch
-        {
-            // 写入失败时静默处理，不影响主程序运行
-        }
-    }
+    public void Save(CrosshairConfig config) => JsonConfigStore.Save(ConfigPath, config);
 
     public List<string> GetPresetNames()
     {
-        if (!Directory.Exists(PresetsDir))
-            return new List<string>();
-
+        if (!Directory.Exists(PresetsDir)) return new List<string>();
         return Directory.GetFiles(PresetsDir, "*.json")
-            .Select(f => Path.GetFileNameWithoutExtension(f))
+            .Select(Path.GetFileNameWithoutExtension)
+            .Where(n => !string.IsNullOrEmpty(n))
+            .Select(n => n!)
             .ToList();
     }
 
     public CrosshairConfig? LoadPreset(string name)
     {
+        var path = Path.Combine(PresetsDir, $"{JsonConfigStore.SanitizeFileName(name)}.json");
+        if (!File.Exists(path)) return null;
         try
         {
-            var path = Path.Combine(PresetsDir, $"{SanitizeFileName(name)}.json");
-            if (!File.Exists(path)) return null;
-
             var json = File.ReadAllText(path);
-            return JsonSerializer.Deserialize<CrosshairConfig>(json, JsonOptions);
+            return System.Text.Json.JsonSerializer.Deserialize<CrosshairConfig>(json,
+                new System.Text.Json.JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+                });
         }
-        catch
-        {
-            return null;
-        }
+        catch { return null; }
     }
 
     public void SavePreset(string name, CrosshairConfig config)
     {
-        Directory.CreateDirectory(PresetsDir);
         var clone = config.Clone();
         clone.PresetName = name;
-        var json = JsonSerializer.Serialize(clone, JsonOptions);
-        File.WriteAllText(Path.Combine(PresetsDir, $"{SanitizeFileName(name)}.json"), json);
+        var path = Path.Combine(PresetsDir, $"{JsonConfigStore.SanitizeFileName(name)}.json");
+        JsonConfigStore.Save(path, clone);
     }
 
     public void DeletePreset(string name)
     {
-        var path = Path.Combine(PresetsDir, $"{SanitizeFileName(name)}.json");
-        if (File.Exists(path))
-            File.Delete(path);
-    }
-
-    private static string SanitizeFileName(string name)
-    {
-        var invalid = Path.GetInvalidFileNameChars();
-        return string.Concat(name.Select(c => invalid.Contains(c) ? '_' : c));
+        var path = Path.Combine(PresetsDir, $"{JsonConfigStore.SanitizeFileName(name)}.json");
+        if (File.Exists(path)) File.Delete(path);
     }
 }
