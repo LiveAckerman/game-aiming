@@ -12,6 +12,49 @@ namespace FPSToolbox.Tray;
 /// </summary>
 public class TrayIconManager : IDisposable
 {
+    /// <summary>
+    /// 取托盘图标。优先从 exe 的内嵌图标拿(<ApplicationIcon> 编到 exe 里了),
+    /// 失败时再查磁盘 Resources\icon.ico,最后才兜底到系统默认图标。
+    /// </summary>
+    private static Icon LoadAppIcon()
+    {
+        // 1) WPF 嵌入资源(csproj 里 <Resource Include="Resources\icon.ico" />) —— 原样多尺寸 ico,最清晰
+        try
+        {
+            var uri = new Uri("pack://application:,,,/Resources/icon.ico");
+            var sri = System.Windows.Application.GetResourceStream(uri);
+            if (sri != null)
+            {
+                using var s = sri.Stream;
+                return new Icon(s);
+            }
+        }
+        catch { /* fallback */ }
+
+        // 2) 从 exe 自身的 ApplicationIcon 提取(单尺寸,高 DPI 会偏糊)
+        try
+        {
+            var exePath = Environment.ProcessPath
+                ?? System.Reflection.Assembly.GetExecutingAssembly().Location;
+            if (!string.IsNullOrEmpty(exePath) && File.Exists(exePath))
+            {
+                var ico = Icon.ExtractAssociatedIcon(exePath);
+                if (ico != null) return ico;
+            }
+        }
+        catch { }
+
+        // 3) 磁盘文件
+        try
+        {
+            var iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "icon.ico");
+            if (File.Exists(iconPath)) return new Icon(iconPath);
+        }
+        catch { }
+
+        return SystemIcons.Application;
+    }
+
     private NotifyIcon? _notifyIcon;
     private readonly ToolManager _toolManager;
     private readonly ToolRegistry _registry;
@@ -41,12 +84,7 @@ public class TrayIconManager : IDisposable
             ContextMenuStrip = BuildMenu(),
         };
 
-        try
-        {
-            var iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "icon.ico");
-            _notifyIcon.Icon = File.Exists(iconPath) ? new Icon(iconPath) : SystemIcons.Application;
-        }
-        catch { _notifyIcon.Icon = SystemIcons.Application; }
+        _notifyIcon.Icon = LoadAppIcon();
 
         _notifyIcon.DoubleClick += (_, _) => _onShowMain();
         _toolManager.StateChanged += _ => RefreshMenu();
@@ -94,6 +132,18 @@ public class TrayIconManager : IDisposable
 
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("打开主界面", null, (_, _) => _onShowMain());
+        menu.Items.Add("GitHub 开源地址", null, (_, _) =>
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "https://github.com/LiveAckerman/game-aiming",
+                    UseShellExecute = true,
+                });
+            }
+            catch { }
+        });
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("完全退出（关闭所有工具）", null, (_, _) => _onExitAll());
 

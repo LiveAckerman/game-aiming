@@ -120,8 +120,11 @@ Root: HKCU; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; \
 Filename: "{tmp}\dotnet-runtime.exe"; Parameters: "/install /quiet /norestart"; \
     StatusMsg: "正在安装 .NET 8 运行时..."; Check: NeedsDotNet
 #endif
+; 交互安装:在向导末页显示"立即运行"勾选框(用户可勾可不勾)
 Filename: "{app}\{#AppExeName}"; Description: "立即运行 FPS 工具箱"; \
     Flags: nowait postinstall skipifsilent
+; 静默安装(主框架"立即更新"走 /SILENT):装完自动启动新版,不显示任何提示
+Filename: "{app}\{#AppExeName}"; Flags: nowait runasoriginaluser; Check: WizardSilent
 
 [UninstallRun]
 ; 卸载前先关掉所有相关进程
@@ -199,30 +202,26 @@ begin
     nil);
 end;
 
-function NextButtonClick(CurPageID: Integer): Boolean;
-var
-  DummyCode: Integer;
+// PrepareToInstall 在所有页过完、文件落盘之前执行。对 /SILENT 和交互两种模式都通用。
+// 返回非空字符串会中止安装并把字符串当作错误显示。
+function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
-  Result := True;
-  if (CurPageID = wpReady) and NeedsDotNet() then
-  begin
-    DownloadPage.Clear;
-    DownloadPage.Add('{#DotNetUrl}', 'dotnet-runtime.exe', '');
-    DownloadPage.Show;
+  Result := '';
+  if not NeedsDotNet() then Exit;
+
+  DownloadPage.Clear;
+  DownloadPage.Add('{#DotNetUrl}', 'dotnet-runtime.exe', '');
+  DownloadPage.Show;
+  try
     try
-      try
-        DownloadPage.Download;
-      except
-        if MsgBox('下载 .NET 8 运行时失败:' + #13#10 + GetExceptionMessage() + #13#10 + #13#10 +
-                  '请检查网络后重试,或改用离线版安装包(含 runtime)。' + #13#10 + #13#10 +
-                  '是否打开 .NET 8 官方下载页面手动安装?',
-                  mbCriticalError, MB_YESNO) = IDYES then
-          ShellExecAsOriginalUser('open', 'https://dotnet.microsoft.com/download/dotnet/8.0', '', '', SW_SHOW, ewNoWait, DummyCode);
-        Result := False;
-      end;
-    finally
-      DownloadPage.Hide;
+      DownloadPage.Download;
+    except
+      Result := '下载 .NET 8 运行时失败:' + #13#10 + GetExceptionMessage() + #13#10 + #13#10 +
+                '请检查网络后重试,或改用离线版安装包(含 runtime)。' + #13#10 +
+                '官方下载: https://dotnet.microsoft.com/download/dotnet/8.0';
     end;
+  finally
+    DownloadPage.Hide;
   end;
 end;
 
@@ -263,6 +262,37 @@ begin
   end;
 end;
 #endif
+
+// ──────────────────────────────────────────────────────────────
+// 进入组件选择页时,扫 {app}\tools\ 把已存在的子工具自动勾选
+// (升级 / 重装 / 之前卸载时保留了子工具 三种场景都能识别)
+// ──────────────────────────────────────────────────────────────
+procedure AutoCheckExistingTools;
+var
+  I: Integer;
+  AppDir, Desc: String;
+  HasCrosshair, HasGamma: Boolean;
+begin
+  AppDir := WizardForm.DirEdit.Text;
+  HasCrosshair := FileExists(AppDir + '\tools\CrosshairTool\CrosshairTool.exe');
+  HasGamma     := FileExists(AppDir + '\tools\GammaTool\GammaTool.exe');
+  if (not HasCrosshair) and (not HasGamma) then Exit;
+
+  for I := 0 to WizardForm.ComponentsList.Items.Count - 1 do
+  begin
+    Desc := WizardForm.ComponentsList.ItemCaption[I];
+    if HasCrosshair and (Pos('准心', Desc) > 0) then
+      WizardForm.ComponentsList.Checked[I] := True;
+    if HasGamma and (Pos('调节', Desc) > 0) then
+      WizardForm.ComponentsList.Checked[I] := True;
+  end;
+end;
+
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if CurPageID = wpSelectComponents then
+    AutoCheckExistingTools();
+end;
 
 // ──────────────────────────────────────────────────────────────
 // 卸载前:询问用户勾选哪些子工具一起卸载 + 是否清用户数据

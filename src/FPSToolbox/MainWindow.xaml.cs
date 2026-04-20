@@ -173,6 +173,11 @@ public partial class MainWindow : Window
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
                 FileName = tmp,
+                // /SILENT: 只显示进度条,不显示向导;已装的组件 installer 会自动检测并保留
+                // /SP-:    跳过"这将会安装 XXX"的确认页
+                // /NORESTART: 不自动重启(主框架升级不需要重启系统)
+                // /SUPPRESSMSGBOXES: 所有确认框取默认值
+                Arguments = "/SILENT /SP- /NORESTART /SUPPRESSMSGBOXES",
                 UseShellExecute = true,
             });
             AllowClose = true;
@@ -574,6 +579,20 @@ public partial class MainWindow : Window
             button.Content = origContent;
             RefreshCard(name);
         }
+    }
+
+    private void OnGithubLinkClicked(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = e.Uri.AbsoluteUri,
+                UseShellExecute = true,
+            });
+        }
+        catch { /* ignore */ }
+        e.Handled = true;
     }
 
     private void OnAutoStartChanged(object sender, RoutedEventArgs e)

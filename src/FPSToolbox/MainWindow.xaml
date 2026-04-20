@@ -84,7 +84,17 @@
                     <CheckBox x:Name="ChkMinToTray" Content="关闭窗口时最小化到托盘"
                               Checked="OnMinToTrayChanged" Unchecked="OnMinToTrayChanged"/>
                 </StackPanel>
-                <TextBlock x:Name="TxtFooterVersion" Text="版本 v1.0.0" Foreground="#666" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock Foreground="#666" VerticalAlignment="Center">
+                        <Hyperlink x:Name="LnkGithub" NavigateUri="https://github.com/LiveAckerman/game-aiming"
+                                   RequestNavigate="OnGithubLinkClicked"
+                                   Foreground="#4EC9B0" TextDecorations="None">
+                            <Run Text="⭐ GitHub 开源地址"/>
+                        </Hyperlink>
+                    </TextBlock>
+                    <TextBlock Text="   |   " Foreground="#444" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="TxtFooterVersion" Text="版本 v1.0.0" Foreground="#666" VerticalAlignment="Center"/>
+                </StackPanel>
             </Grid>
         </Border>
 
